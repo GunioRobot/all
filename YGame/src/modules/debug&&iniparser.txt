@@ -1,0 +1,7 @@
+	CINIParser profile("profile.ini");
+	int width = profile.get("","winW", 1024);
+	int height = profile.get("","winH", 768);
+	int fsaa = profile.get("","fsaa", 0);
+	bool vsync = profile.get("","vsync", 1);
+
+	CDebug dump("crucial.dump");

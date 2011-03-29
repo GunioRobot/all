@@ -1,0 +1,34 @@
+	std::cout << "\nLayers : " << ann.n_layers;
+	std::cout << "\nConfig : ";
+	for (unsigned int i = 0;i < ann.n_layers; ++i) {
+		std::cout << ann.config[i] << ", ";
+	}
+	for (unsigned int i = 1;i < ann.n_layers; ++i) {
+		const unsigned int y = i - 1; //offset for weights, deltas, errors (whom exclude an input layer)
+		std::cout << "\nLayer[" << i << "] (" << y << ')';
+		std::cout << "\n	Outputs[i] = " << ann.outputs[i];
+		std::cout << "\n	Errors[y] = " << ann.errors[y];
+		std::cout << "\n	Deltas[y] = " << ann.deltas[y];
+		std::cout << "\n	Weights[y] = " << ann.weights[y];
+		std::cout << '\n';
+
+		for (unsigned int j = 0; j < ann.config[i]; ++j) {
+			std::cout << "\n	Neuron[" << i << "][" << j << ']';
+			std::cout << "\n		Outputs[i][j] = " << ann.outputs[i][j];
+			std::cout << "\n		Errors[y][j] = " << ann.errors[y][j];
+			std::cout << "\n		Deltas[y][j] = " << ann.deltas[y][j];
+			std::cout << "\n		Weights[y][j] = " << ann.weights[y][j];
+			std::cout << '\n';
+
+			for (unsigned int k = 0; k < ann.config[y] + 1; ++k) {
+				std::cout << "\n		Weight[" << i << "][" << j << "][" << k << ']';
+				std::cout << "\n			Deltas[y][j][k] = " << ann.deltas[y][j][k];
+				std::cout << "\n			Weights[y][j][k] = " << ann.weights[y][j][k];
+
+				if (k == ann.config[i - 1]) {
+					std::cout << " (BIAS)";
+				}
+				std::cout << '\n';
+			}
+		}
+	}
