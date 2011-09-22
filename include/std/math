@@ -1,0 +1,31 @@
+#pragma once
+
+#define FLT_NAN (0.f / 0.f)
+#define DBL_NAN (0.0 / 0.0)
+
+#define FLT_INF	(1.f / 0.f)
+#define DBL_INF	(1.0 / 0.0)
+
+#define _USE_MATH_DEFINES
+
+#include <cfloat>
+#include <climits>
+#include <cmath>
+
+inline float degrees(float radians) { return (radians * 57.2957795f); }
+inline float radians(float degrees) { return (degrees * 0.0174532925f); }
+
+inline float invsqrtf(float x) {
+	/*const float xhalf = 0.5f * x;
+	int i = *(int*) &x;
+	i = 0x5f3759df - (i >> 1);
+	x = *(float*) &i;
+	x = x * (1.5f - xhalf * (x * x)); // 99.8% accuracy
+	//x = x * (1.5f - xhalf * (x * x)); // 99.99995% accuracy
+	return x;*/
+
+	return (1.f / sqrtf(x)); // pedantic
+}
+
+template <typename T>
+inline T lerp(T a, T b, T t) { return a + (b - a) * t; }

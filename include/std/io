@@ -1,0 +1,29 @@
+#pragma once
+
+#include <std/assert>
+#include <cstdio>
+
+class File {
+	FILE* const m_stream;
+public:
+	File(const char* file_name, const char* modes) : m_stream(fopen(file_name, modes)) {}
+	~File() { fclose(m_stream); }
+
+	inline bool open() const { return (m_stream != 0); }
+	inline size_t offset() const { return ftell(m_stream); }
+
+	inline size_t length() const {
+		const size_t cur_offset = offset();
+
+		fseek(m_stream, 0, SEEK_END);
+		const size_t end_offset = offset();
+		fseek(m_stream, cur_offset, SEEK_SET);
+
+		return end_offset;
+	}
+	inline void restart() { rewind(m_stream); }
+	inline bool seek(size_t index) { return !fseek(m_stream, index, SEEK_SET); }
+
+	inline size_t read(void* ptr, size_t size, size_t count = 1) { assert(ptr != 0); return fread(ptr, size, count, m_stream); }
+	inline size_t write(const void* ptr, size_t size, size_t count = 1) { assert(ptr != 0); return fwrite(ptr, size, count, m_stream); }
+};
