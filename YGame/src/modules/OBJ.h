@@ -1,5 +1,0 @@
-#define OBJ_VERTEX	'v'
-	#define VERT_TEXTURE	't'
-	#define VERT_NORMAL	'n'
-#define OBJ_FACE	'f'
-#define OBJ_GROUPING	'g'
