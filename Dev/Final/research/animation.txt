@@ -1,0 +1,9 @@
+Wolfire Procedural Animation
+
+http://www.youtube.com/watch?v=SAtwQa8t_3g
+
+http://isg.cs.tcd.ie/projects/DualQuaternions/
+
+
+BVH Repo:
+https://sites.google.com/a/cgspeed.com/cgspeed/motion-capture/cmu-bvh-conversion

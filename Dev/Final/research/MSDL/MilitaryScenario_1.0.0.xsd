@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?purpose description="This schema defines the Military Scenario"?>
+<?version number="1.0" date="March 25, 2007"?>
+<?copyright statement="Copyright (c) 2007 by the Simulation Interoperability Standards Organization, Inc.
+P.O. Box 781238
+Orlando, FL 32878-1238, USA
+All rights reserved.
+Permission is hereby granted for SISO developing committee participants to reproduce this document only for purposes of SISO product development activities. Prior to submitting this document to another standards development organization for standardization activities, permission must first be obtained from the SISO Standards Activity Committee (SAC). Other entities seeking permission to reproduce this document, in whole or in part, must obtain permission from the SISO Executive Committee (EXCOM).
+SISO EXCOM
+P.O. Box 781238
+Orlando, FL 32878-1238, USA"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jc3iedm="urn:int:nato:standard:mip:jc3iedm:3.1:oo:2.0" xmlns:modelID="http://www.sisostds.org/schemas/modelID" xmlns:msdl="urn:sisostds:scenario:military:data:draft:msdl:1" targetNamespace="urn:sisostds:scenario:military:data:draft:msdl:1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0.0" id="MSDL">
+	<xs:include schemaLocation="MsdlComplexTypes_1.0.0.xsd"/>
+	<xs:element name="MilitaryScenario" type="msdl:MilitaryScenarioType">
+		<xs:annotation>
+			<xs:documentation>The Military Scenario for the exercise.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+</xs:schema>

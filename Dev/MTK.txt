@@ -1,0 +1,22 @@
+////////////////////////
+// Mission/Mod Tool Kit
+
+by Rommel
+
+// Requirements
+
+Large Terrain
+	Micro-detailed
+		Probably Procedural
+			Biomes
+			Rivers
+	Built from DEM Data
+
+////////////////////////
+// File Formats
+
+Terrain
+	Height Map
+	?Biome Mask?
+	?Water Mask?
+
