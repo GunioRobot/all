@@ -10,23 +10,20 @@
 
 // All declared inline for static linkage, and implied that most will be inlined anyway.
 // Builders
-inline Matrix4 perspective(float fovy, float aspect, float zNear, float zFar) {
-	const float yMax = zNear * tanf(radians(fovy / 2));
-	const float yMin = -yMax;
+inline Matrix4 perspective(float fovy, float aspect, float n, float f) {
+	const float t = n * tanf(radians(fovy / 2));
+	const float r = t * aspect;
 
-	const float xMax = yMax * aspect;
-	const float xMin = yMin * aspect;
-
-	const float zRange = zFar - zNear;
-	const float zNear2 = 2 * zNear;
+	const float d = f - n;
 
 	return Matrix4(
-		zNear2 / (xMax - xMin), 0, 0, 0,
-		0, zNear2 / (yMax - yMin), 0, 0,
-		0, 0, -(zFar + zNear) / zRange, -1,
-		0, 0, -(zFar * zNear2) / zRange, 0
+		n / r, 0, 0, 0,
+		0, n / t, 0, 0,
+		0, 0, -(f + n) / d, -1,
+		0, 0, -(f * n * 2) / d, 0
 	);
 }
+
 inline Quaternion rotation(const Vector3& euler_angles) {
 	const Vector3 half = euler_angles * 0.5f;
 

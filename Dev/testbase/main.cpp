@@ -68,14 +68,43 @@ void UseFunction() {
 	}
 }
 
-int main() {
-std::string abc("abc");
-std::string defgh("defgh");
+struct RD {
+	bool a;
+	int b;
+};
 
-for (size_t i = 0; i < defgh.length(); ++i)
-{
-    printf("%c", abc[i % abc.length()]);
-}
+struct RS {
+	bool operator() (const RD& a, const RD& b) {
+		return (a.a == true) && (b.a == false);
+	}
+};
+
+std::vector<RD> rds;
+RS rs;
+
+int main() {
+	RD x = {true, 343};
+	RD y = {false, 641};
+
+	for (int i = 0; i < 10; ++i) {
+		rds.push_back(x);
+		rds.push_back(y);
+	}
+
+
+	std::sort(rds.begin(), rds.end(), rs);
+
+	for (int i = 0; i < rds.size(); ++i) {
+		printf("%i%i\n", rds[i].a, rds[i].b);
+	}
+
+	std::string abc("abc");
+	std::string defgh("defgh");
+
+	for (size_t i = 0; i < defgh.length(); ++i)
+	{
+	    printf("%c", abc[i % abc.length()]);
+	}
 
 	//std::cout << "Average value: " << avg / iterations / 2 << '\n';
 	return 0;

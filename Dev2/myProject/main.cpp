@@ -7,7 +7,7 @@ public:
 	void update() {
 		const double current = glw::getTime();
 
-		m_delta = current - previous;
+		m_delta = current - m_previous;
 		m_previous = current;
 	}
 };
@@ -43,10 +43,10 @@ public:
 
 			if (fps.ready()) {
 				printf("%i\n", (int) (1.f / dt));
-				fps.reset()
+				fps.reset();
 			}
-			if (render.reader()) {
-				render.reset()
+			if (render.ready()) {
+				render.reset();
 			}
 			if (input.ready()) {
 				input.reset();
