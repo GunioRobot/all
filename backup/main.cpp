@@ -1,27 +1,3 @@
-class Timer {
-	double m_previous, m_delta;
-public:
-	Timer() : m_previous(0), m_delta(0) {}
-
-	double delta() const { return m_delta; }
-	void update() {
-		const double current = glw::getTime();
-
-		m_delta = current - m_previous;
-		m_previous = current;
-	}
-};
-
-class Accumulator {
-	double m_accum, m_resolution;
-public:
-	Accumulator(double resolution) : m_accum(0), m_resolution(resolution) {}
-	bool ready() const { return m_accum > m_resolution; }
-
-	void add(double dt) { m_accum += dt; }
-	void reset() { m_accum = 0; }
-};
-
 class Application {
 	size_t ticks;
 	bool running;
