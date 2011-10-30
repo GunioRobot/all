@@ -11,22 +11,6 @@
 
 #include <iostream>
 
-struct Camera {
-	Vector3 m_pos;
-	float m_heading, m_pitch;
-
-	Matrix4 m_view;
-
-	Camera(Vector3 origin, float heading = 0, float pitch = 0) : m_pos(origin), m_heading(heading), m_pitch(pitch) { update(); }
-
-	void update() {
-		const Quaternion q = rotation(Vector3(m_pitch, m_heading, 0.f));
-
-		m_view = getMatrix4(q);
-		translate(m_view, m_pos);
-	}
-};
-
 void printmat(const glm::mat4& p) {
 	for (int i = 0; i < 16; i += 4) printf("%f %f %f %f\n", (&p[0][0])[i], (&p[0][0])[i + 1], (&p[0][0])[i + 2], (&p[0][0])[i + 3]);
 }
@@ -44,8 +28,8 @@ int main() {
 	float m_heading = 5, m_pitch = 20;
 
 	Quaternion ar = rotation(Vector3(m_pitch, m_heading, 0.f));
-	Matrix4 av =  getMatrix4(ar);
-	relative_translate(av, m_pos);
+	Matrix4 av = getMatrix4(ar);
+	translate(av, m_pos);
 
 	Matrix4 a1 = perspective(fovy, w / h, near, far);
 	Matrix4 a2(1);
@@ -56,6 +40,9 @@ int main() {
 	Matrix4 a4 = a3 * av;
 	a4 = a1 * a4; // pre-multiply, row major
 
+	Matrix4 a5 = orthographic(0, 800, 600, 0, 0, 1);
+
+	// GLM
 	glm::quat gr(glm::vec3(m_pitch, m_heading, 0.f));
 	glm::mat4 gv = glm::mat4_cast(gr);
 	gv = glm::translate(gv, glm::vec3(m_pos.x, m_pos.y, m_pos.z));
@@ -69,24 +56,29 @@ int main() {
 	glm::mat4 g4 = gv * g3;
 	g4 = g4 * g1; // post-multiply, column major
 
+	glm::mat4 g5 = glm::ortho(0.f, 800.f, 600.f, 0.f, 0.f, 1.f);
+
 	printf("\nROM\n");
 	printf("Original :\n"); printmat(a1);
 	printf("Translation :\n"); printmat(a2);
 	printf("Rotation :\n"); printmat(av);
 	printf("Result :\n"); printmat(a3);
 	printf("Mult :\n"); printmat(a4);
+	printf("Ortho :\n"); printmat(a5);
 	printf("\nGLM\n");
 	printf("Original :\n"); printmat(g1);
 	printf("Translation :\n"); printmat(g2);
 	printf("Rotation :\n"); printmat(gv);
 	printf("Result :\n"); printmat(g3);
 	printf("Mult :\n"); printmat(g4);
+	printf("Ortho :\n"); printmat(g5);
 
 	// assert compare the matrices, they should be equal!
 	assertcomp(a1, g1);
 	assertcomp(a2, g2);
 	assertcomp(a3, g3);
 	assertcomp(a4, g4);
+	assertcomp(a5, g5);
 
 	printf("\nUnit Tests completed\n\n");
 
@@ -97,7 +89,7 @@ int main() {
 			a1 = av * a2;
 			a2 = a1 * a1;
 			a4 = a2 * a3;
-			relative_translate(a3, Vector3(1,34,2));
+			translate(a3, Vector3(1,34,2));
 		}
 		printmat(a3);
 	}

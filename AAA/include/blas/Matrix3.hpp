@@ -28,14 +28,6 @@ struct Matrix3 {
 	inline const float& operator[](size_t i) const { return m[i]; }
 };
 
-inline Matrix3 transpose(const Matrix3& a) {
-	return Matrix3(
-		a[0], a[3], a[6],
-		a[1], a[4], a[7],
-		a[2], a[5], a[8]
-	);
-}
-
 inline Matrix3 multiply(const Matrix3& a, const Matrix3& b) {
 	return Matrix3(
 		a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
@@ -47,5 +39,12 @@ inline Matrix3 multiply(const Matrix3& a, const Matrix3& b) {
 		a[6] * b[0] + a[7] * b[3] + a[8] * b[6],
 		a[6] * b[1] + a[7] * b[4] + a[8] * b[7],
 		a[6] * b[2] + a[7] * b[5] + a[8] * b[8]
+	);
+}
+inline Matrix3 transpose(const Matrix3& a) {
+	return Matrix3(
+		a[0], a[3], a[6],
+		a[1], a[4], a[7],
+		a[2], a[5], a[8]
 	);
 }

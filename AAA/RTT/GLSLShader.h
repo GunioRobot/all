@@ -16,6 +16,8 @@
 #include <map>
 #include <string>
 
+using std::string;
+
 class GLSLShader
 {
 public:

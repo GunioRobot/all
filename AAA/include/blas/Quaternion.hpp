@@ -2,10 +2,6 @@
 
 #include <std/math>
 
-#include "Vector3.hpp"
-#include "Matrix3.hpp"
-#include "Matrix4.hpp"
-
 struct Quaternion;
 inline float length2(const Quaternion& a);
 inline Quaternion multiply(const Quaternion& a, const Quaternion& b);
@@ -31,19 +27,3 @@ inline Quaternion multiply(const Quaternion& a, const Quaternion& b) {
 		(a.w * b.z) + (a.x * b.y) - (a.y * b.x) + (a.z * b.w)
 	);
 }
-
-inline Matrix3 getMatrix3(const Quaternion& a) {
-	const float s = 2.f / length2(a);
-
-	const float xs = a.x * s, ys = a.y * s, zs = a.z * s;
-	const float wx = a.w * xs, wy = a.w * ys, wz = a.w * zs;
-	const float xx = a.x * xs, xy = a.x * ys, xz = a.x * zs;
-	const float yy = a.y * ys, yz = a.y * zs, zz = a.z * zs;
-
-	return Matrix3(
-		1.f - (yy + zz),	xy + wz,		xz - wy,
-		xy - wz,		1.f - (xx + zz),	yz + wx,
-		xz + wy,		yz - wx,		1.f - (xx + yy)
-	);
-}
-inline Matrix4 getMatrix4(const Quaternion& a) { return Matrix4(getMatrix3(a)); }

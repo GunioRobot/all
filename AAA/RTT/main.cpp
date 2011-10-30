@@ -10,10 +10,6 @@
 
 #define GL_CHECK_ERRORS assert(glGetError() == GL_NO_ERROR);
 
-typedef struct{
-	float r,g,b;
-}color_type;
-
 // The polygon (triangle), 3 numbers that aim 3 vertices
 typedef struct{
 	uint a,b,c;
@@ -36,7 +32,6 @@ typedef struct {
     vertex_type vertex[MAX_VERTICES];
     polygon_type polygon[MAX_POLYGONS];
     mapcoord_type mapcoord[MAX_VERTICES];
-    color_type colors[MAX_VERTICES];
 } obj_type;
 
 obj_type cube = {
@@ -80,22 +75,12 @@ obj_type cube = {
 		{1, 0},
 		{0, 1},
 		{1, 1}
-	},
-	{
-		{1, 0, 0},
-		{0, 1, 0},
-		{0, 0, 1},
-		{1, 0, 0},
-		{0, 1, 0},
-		{0, 0, 1},
-		{1, 0, 0},
-		{0, 1, 0}
 	}
 };
 
 uint n_indices = sizeof(cube.polygon) / sizeof(cube.polygon[0]);
 
-GLuint vboVerticesID, vboColorsID, vboIndicesID, vaoID;
+GLuint vboVerticesID, vboIndicesID, vaoID;
 GLuint sqvboTexCoordID, sqvaoID;
 
 GLSLShader colorshader, texshader;
@@ -103,7 +88,7 @@ GLSLShader colorshader, texshader;
 int filling = 1;
 
 // Projection and View matrices
-Matrix4 P, V(1);
+Matrix4 V(1);
 
 void InitShaders() {
 	colorshader.LoadFromFile(GL_VERTEX_SHADER, "shader.vert");
@@ -111,7 +96,6 @@ void InitShaders() {
 	colorshader.CreateAndLinkProgram();
 	colorshader.Use();
 		colorshader.AddAttribute("vVertex");
-		colorshader.AddAttribute("vColor");
 		colorshader.AddUniform("MVP");
 	colorshader.UnUse();
 
@@ -133,7 +117,6 @@ void InitShaders() {
 void InitVAO() {
 	glGenVertexArrays(1, &vaoID);
 	glGenBuffers(1, &vboVerticesID);
-	glGenBuffers(1, &vboColorsID);
 	glGenBuffers(1, &vboIndicesID);
 	GL_CHECK_ERRORS
 
@@ -143,13 +126,6 @@ void InitVAO() {
 		GL_CHECK_ERRORS
 		glEnableVertexAttribArray(colorshader["vVertex"]);
 		glVertexAttribPointer (colorshader["vVertex"], 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*3 ,0);
-		GL_CHECK_ERRORS
-
-		glBindBuffer (GL_ARRAY_BUFFER, vboColorsID);
-		glBufferData (GL_ARRAY_BUFFER, sizeof(cube.colors), &cube.colors[0], GL_STATIC_DRAW);
-		GL_CHECK_ERRORS
-		glEnableVertexAttribArray(colorshader["vColor"]);
-		glVertexAttribPointer (colorshader["vColor"], 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*3 ,0);
 		GL_CHECK_ERRORS
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndicesID);
@@ -211,10 +187,10 @@ public:
 };
 
 struct RenderDetail {
-	Matrix4 MVP;
+	Matrix4 MV;
 	uint vao, indices;
 
-	RenderDetail(const Matrix4& mvp, uint v, uint i) : MVP(mvp), vao(v), indices(i) {}
+	RenderDetail(const Matrix4& mv, uint v, uint i) : MV(mv), vao(v), indices(i) {}
 };
 
 class Viewport {
@@ -224,12 +200,14 @@ public:
 
 	void bind() { glViewport(0, 0, m_width, m_height); }
 	void resize(uint width, uint height) { m_width = width; m_height = height; }
+
+	uint width() const { return m_width; }
+	uint height() const { return m_height; }
 };
 
 class Renderer {
 
 	std::vector<RenderDetail> queue;
-	std::vector<RenderDetail> texqueue;
 
 	unsigned int fbo_id;
 	unsigned int depth_buffer;
@@ -239,14 +217,11 @@ class Renderer {
 	Viewport m_FBOViewport, m_ScreenViewport;
 public:
 	Renderer(int sw, int sh, int fw, int fh) : m_FBOWidth(fw), m_FBOHeight(fh), m_FBOViewport(fw, fh), m_ScreenViewport(sw, sh) {}
-	~Renderer() {
-		glDeleteFramebuffers(1, &fbo_id);
-	}
 
 	void enqueue(const RenderDetail& rd) { queue.push_back(rd); }
-	void texenqueue(const RenderDetail& rd) { texqueue.push_back(rd); }
 	void resize(int sw, int sh) {
 		m_ScreenViewport.resize(sw, sh);
+		m_FBOViewport.resize(sw, sh);
 	}
 
 	void initFBO() {
@@ -278,6 +253,8 @@ public:
 	void render() {
 		uint prevVAO = 0;
 
+		Matrix4 P = perspective(45.0f, (float)m_FBOViewport.width() / (float)m_FBOViewport.height(), 1.f, 100.f);
+
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 		m_FBOViewport.bind();
 
@@ -288,8 +265,9 @@ public:
 		const uint csmvp = colorshader("MVP");
 		for (size_t i = 0; i < queue.size(); ++i) {
 			const RenderDetail& rd = queue[i];
+			const Matrix4 MVP = rd.MV * P;
 
-			glUniformMatrix4fv(csmvp, 1, GL_FALSE, &rd.MVP[0]);
+			glUniformMatrix4fv(csmvp, 1, GL_FALSE, &MVP[0]);
 			if (prevVAO != rd.vao) {
 				prevVAO = rd.vao;
 				glBindVertexArray(rd.vao);
@@ -307,37 +285,26 @@ public:
 		texshader.Use();
 		glBindTexture(GL_TEXTURE_2D, m_TextureID);
 
-		const uint tsmvp = texshader("MVP");
-		for (size_t i = 0; i < texqueue.size(); ++i) {
-			const RenderDetail& rd = texqueue[i];
+	//	float aspect = (float)m_ScreenViewport.width() / (float)m_ScreenViewport.height();
+		P = orthographic(-1, 1, -1, 1, -1, 1);
+		//P = perspective(90.0f, aspect, 1.f, 100.f);
+		//translate(P, Vector3(0,0, -0.5));
 
-			glUniformMatrix4fv(tsmvp, 1, GL_FALSE, &rd.MVP[0]);
-			if (prevVAO != rd.vao) {
-				prevVAO = rd.vao;
-				glBindVertexArray(rd.vao);
-			}
-			glDrawElements(GL_TRIANGLES, rd.indices, GL_UNSIGNED_INT, 0);
+		const uint tsmvp = texshader("MVP");
+		glUniformMatrix4fv(tsmvp, 1, GL_FALSE, &P[0]);
+		if (prevVAO != sqvaoID) {
+			prevVAO = sqvaoID;
+			glBindVertexArray(sqvaoID);
 		}
-		//texshader.UnUse();
+		glDrawElements(GL_TRIANGLES, n_indices, GL_UNSIGNED_INT, 0);
 
 		queue.clear();
-		texqueue.clear();
 
 		glutSwapBuffers();
 	}
 };
 
-Renderer renderer(800, 600, 320, 240);
-
-void drawBox(const Matrix4& M) {
-	const Matrix4 MVP = M * V * P;
-	renderer.enqueue(RenderDetail(MVP, vaoID, n_indices));
-}
-
-void drawTexBox(const Matrix4& M) {
-	const Matrix4 MVP = M * V * P;
-	renderer.texenqueue(RenderDetail(MVP, sqvaoID, n_indices));
-}
+Renderer renderer(800, 600, 800, 600);
 
 // Absolute rotation values (0-359 degrees) and rotiation increments for each frame
 float rotation_x = 0;
@@ -346,56 +313,25 @@ float rotation_z = 0;
 
 float drawdist = 40.f;
 
-void drawColouredRotatingBox() {
-	Matrix4 M(1);
-	scale(M, Vector3(10,10,10));
-	rotate(M, rotation(Vector3(1, 0, 0), rotation_x));
-	rotate(M, rotation(Vector3(0, 1, 0), rotation_y));
-	rotate(M, rotation(Vector3(0, 0, 1), rotation_z));
-
-	drawdist += 0.2f;
-	translate(M, Vector3(0,0, -drawdist));
-	if (drawdist > 100) drawdist = 40;
-
-	drawBox(M);
-}
-
-void drawTexturedRotatingBox() {
-	Matrix4 M(1);
-	scale(M, Vector3(10,10,10));
-	rotate(M, rotation(Vector3(1, 0, 0), rotation_x));
-	translate(M, Vector3(0,0,-50));
-
-	drawTexBox(M);
-}
-
 void OnRender() {
-	for (int i = 0; i < 2; ++i) {
-		drawTexturedRotatingBox();
-		drawColouredRotatingBox();
-	}
+	Matrix4 M(1);
+	scale(M, Vector3(10,10,10));
+	//translate(M, Vector3(0, 0, 0));
+
+	Matrix4 MV = M * V;
+	renderer.enqueue(RenderDetail(MV, vaoID, n_indices));
+
 	renderer.render();
 }
 
 void OnResize(int w, int h) {
 	renderer.resize(w, h);
-	P = perspective(45.0f, (GLfloat)w / (GLfloat)h, 1.f, 200.f);
-}
-
-void OnShutdown() {
-	glDeleteBuffers(1, &vboVerticesID);
-	glDeleteBuffers(1, &vboColorsID);
-	glDeleteBuffers(1, &sqvboTexCoordID);
-	glDeleteBuffers(1, &vboIndicesID);
-
-	glDeleteVertexArrays(1, &vaoID);
-	glDeleteVertexArrays(1, &sqvaoID);
 }
 
 void OnKey(unsigned char key, int, int) {
 	switch (key) {
-		case 'w': case 'W': relative_translate(V, Vector3(0,0,1)); break;
-		case 's': case 'S': relative_translate(V, Vector3(0,0,-1)); break;
+		case 'w': case 'W': translate(V, Vector3(0,0,1)); break;
+		case 's': case 'S': translate(V, Vector3(0,0,-1)); break;
 	}
 }
 
@@ -423,9 +359,9 @@ void OnIdle() {
 		input.reset();
 	}
 	if (spinner.ready()) {
-		rotation_x = rotation_x + 0.000f;
-		rotation_y = rotation_y + 0.002f;
-		rotation_z = rotation_z + 0.000f;
+		rotation_x = rotation_x + 0.00000f;
+		rotation_y = rotation_y + 0.00002f;
+		rotation_z = rotation_z + 0.00000f;
 		if (rotation_x > 359) rotation_x = 0;
 		if (rotation_y > 359) rotation_y = 0;
 		if (rotation_z > 359) rotation_z = 0;
@@ -450,7 +386,6 @@ void InitGL() {
 
 int main(int argc, char** argv) {
 	//GLUT
-	atexit(OnShutdown);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitContextVersion(3, 3);

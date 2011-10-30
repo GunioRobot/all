@@ -8,7 +8,6 @@
 #include "blas/Matrix4.hpp"
 #include "blas/Quaternion.hpp"
 
-// All declared inline for static linkage, and implied that most will be inlined anyway.
 // Builders
 inline Matrix4 perspective(float fovy, float aspect, float n, float f) {
 	const float t = n * tanf(radians(fovy / 2));
@@ -21,6 +20,17 @@ inline Matrix4 perspective(float fovy, float aspect, float n, float f) {
 		0, n / t, 0, 0,
 		0, 0, -(f + n) / d, -1,
 		0, 0, -(f * n * 2) / d, 0
+	);
+}
+
+inline Matrix4 orthographic(float l, float r, float b, float t, float n, float f) {
+	const float d = f - n;
+
+	return Matrix4(
+		2 / (r - l), 0, 0, 0,
+		0, 2 / (t - b), 0, 0,
+		0, 0, -2 / d, 0,
+		-((r + l) / (r - l)), -((t + b) / (t - b)), -((f + n) / d), 1
 	);
 }
 
@@ -59,6 +69,31 @@ inline Quaternion rotation(const Vector3& axis, const float angle) {
 	return Quaternion(w, x, y, z);
 }
 
+// Conversions
+inline Matrix3 toMatrix3(const Quaternion& a) {
+	const float s = 2.f / length2(a);
+
+	const float xs = a.x * s, ys = a.y * s, zs = a.z * s;
+	const float wx = a.w * xs, wy = a.w * ys, wz = a.w * zs;
+	const float xx = a.x * xs, xy = a.x * ys, xz = a.x * zs;
+	const float yy = a.y * ys, yz = a.y * zs, zz = a.z * zs;
+
+	return Matrix3(
+		1.f - (yy + zz),	xy + wz,		xz - wy,
+		xy - wz,		1.f - (xx + zz),	yz + wx,
+		xz + wy,		yz - wx,		1.f - (xx + yy)
+	);
+}
+inline Matrix4 toMatrix4(const Matrix3& a) {
+	return Matrix4(
+		a[0], a[1], a[2], 0,
+		a[3], a[4], a[5], 0,
+		a[6], a[7], a[8], 0,
+		0, 0, 0, 1
+	);
+}
+inline Matrix4 toMatrix4(const Quaternion& a) { return toMatrix4(toMatrix3(a)); }
+
 // Transforms
 inline void scale(Matrix4& m, const Vector3& s) {
 	Matrix4 sm(
@@ -69,14 +104,13 @@ inline void scale(Matrix4& m, const Vector3& s) {
 	);
 	m *= sm;
 }
-inline void translate(Matrix4& m, const Vector3& t) {
-	m[12] = t.x;
-	m[13] = t.y;
-	m[14] = t.z;
-}
 inline void rotate(Matrix4& m, const Quaternion& q) { m *= getMatrix4(q); }
-inline void relative_translate(Matrix4& m, const Vector3& t) {
-	Matrix4 tm(1);
-	translate(tm, t);
+inline void translate(Matrix4& m, const Vector3& t) {
+	Matrix4 tm(
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		t.x, t.y, t.z, 1
+	);
 	m *= tm;
 }
