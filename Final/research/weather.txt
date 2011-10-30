@@ -1,0 +1,11 @@
+The sky is rendered on a dome. The uv coordinates are generated in the sky-shader using world normals.
+Sky dome uv coordinates:
+
+float2 skyuv = ( float2( worldnormals.x, worldnormals.z ) / abs( worldnormals.y ) ) * 0.1;
+
+The clouds are﻿ created by multiplying two noise maps that each scroll at different speeds.
+The resulting blend is clamped at certain levels to create a 'cloud mask'.
+By adjusting the clamping values you can control the cloud density from clear sky to overcast.
+
+Ref:
+http://www.youtube.com/watch?v=Dah7XC8JWXA
